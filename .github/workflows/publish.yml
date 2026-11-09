@@ -1,0 +1,34 @@
+name: Publish
+run-name: Publish ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: maven-central
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            11
+            21
+      - uses: gradle/actions/setup-gradle@v6
+      # The tag must be the version being published (the tests check LumberClient.VERSION matches it too)
+      - run: test "v$(sed -n 's/^version=//p' gradle.properties)" = "${GITHUB_REF_NAME}"
+      - run: ./gradlew build javadoc -PtestJava=11 -Porg.gradle.java.installations.fromEnv=JAVA_HOME_11_X64
+      # Signs lumber and lumber-logback, uploads them to the Central Portal as one deployment, and releases it to Maven
+      # Central once the portal has checked it. The username and password are a Central Portal user token, not a login.
+      - run: ./gradlew publishAndReleaseToMavenCentral
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}

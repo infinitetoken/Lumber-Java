@@ -1,0 +1,15 @@
+<configuration>
+  <appender name="LUMBER" class="com.infinitetoken.lumber.logback.LumberAppender">
+    <apiKey>${apiKey}</apiKey>
+    <endpoint>${endpoint}</endpoint>
+    <environment>staging</environment>
+    <includeCallerData>true</includeCallerData>
+    <timeout>3 seconds</timeout>
+    <shutdownTimeout>2 seconds</shutdownTimeout>
+    <maxQueue>500</maxQueue>
+  </appender>
+
+  <logger name="configured" level="INFO" additivity="false">
+    <appender-ref ref="LUMBER" />
+  </logger>
+</configuration>
